@@ -15,7 +15,8 @@ const query: Query<RowData> = {
     {
       logic: "and",
       term: [
-        { field: "first_name", operator: "not_equal", value: "Danette" },
+        { field: "first_name", operator: "equal", value: "Danette" },
+        { field: "last_name", operator: "equal", value: "Carnier" },
         { field: "last_name", operator: "equal", value: "Carnier" },
       ],
     },

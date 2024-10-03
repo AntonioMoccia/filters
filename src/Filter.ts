@@ -45,6 +45,8 @@ export class Filters {
   }
 
   private resolveAndCondition(term: any, row: any) {
+    console.log(term);
+    
     return term.every((t: any) => {
       if ("logic" in t) {
         return this.executeQueryOnRow(t, row);
@@ -59,7 +61,7 @@ export class Filters {
       if ("logic" in t) {
         return this.executeQueryOnRow(t, row);
       } else {
-        return this.resolveCondition(row.operator, row[t.field], t.value);
+        return this.resolveCondition(t.operator, row[t.field], t.value);
       }
     });
   }
