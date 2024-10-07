@@ -1,4 +1,5 @@
 export interface BaseQueryField<RowData> {
+  name:string;
   field: keyof RowData;
 }
 

@@ -1,23 +1,18 @@
-import mock from "./MOCK_DATA.json";
+import mock from './MOCK_DATA.json';
 import {
-  BaseQueryField,
-  EqualResolverField,
-  NotEqualResolverField,
   Query,
   RowData,
-  Term
 } from './types'
-import {Filters} from './Filter'
+import { Filter } from './Filter'
 
-const query: Query<RowData> = {
+const deepQuery: Query<RowData> = {
   logic: "or",
   term: [
     {
       logic: "and",
       term: [
-        { field: "first_name", operator: "equal", value: "Danette" },
-        { field: "last_name", operator: "equal", value: "Carnier" },
-        { field: "last_name", operator: "equal", value: "Carnier" },
+        { field: "first_name", operator: "not_equal", value: "Danette" },
+        { field: "last_name", operator: "equal", value: "Carnier" }
       ],
     },
     {
@@ -30,12 +25,39 @@ const query: Query<RowData> = {
   ],
 };
 
-const filters = new Filters();
+const filters = [
+  { name: 'first_name_1', field: "first_name", operator: 'not_equal', initialValue: "Danette" },
+  { name: 'first_name_2', field: "first_name", operator: 'not_equal', initialValue: "Danettefdsfsdfsfdsdfg" },
+  { name: 'first_name_3', field: "first_name", operator: 'not_equal', initialValue: "Danette" },
+  { name: 'first_name_4', field: "first_name", operator: 'not_equal', initialValue: "Danette" }
+]
+ 
+const filter = new Filter({filters})
 
-const filtered = filters.setData(mock).setQueryObject(query).executeQuery();
 
-console.log(filtered);
+console.log(filter.getState());
 
+//const filters = new Filter();
+//combineFilters(filters)
+
+//const filtered = filters.setQueryObject(query).setData(mock.slice(0, 100))
+
+/* 
+const filtersDefs = [
+  {
+    name:''
+    initialValue:'',
+    operator:'equal'
+    operatorFn:()=>{
+
+    },
+
+  }
+]  */
+
+
+/* 
+combineFilters(filters,filters1,filters2) */
 /*     switch (operator) {
 
       case '>':

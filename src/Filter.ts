@@ -1,18 +1,21 @@
 import { equalResolver, notEqualResolver } from "./resolvers";
 
-
-
-
 const buildInResolvers = [equalResolver, notEqualResolver];
-
-export class Filters {
+interface FilterProps {
+  filters: any
+}
+export class Filter<RowData> {
   data = [];
   queryObject: any;
   resolvers = [...buildInResolvers];
+  state:any = {};
+  filters:any ;
+  constructor({ filters }: FilterProps) {
+    this.filters = filters
+    this.initState()
+  }
 
-  constructor() {}
-
-  queryBuilder() {}
+  queryBuilder() { }
 
   checkIfResolverAlreadyExist(newResolver: any) {
     return (
@@ -23,15 +26,18 @@ export class Filters {
   }
 
   addResolver(resolver: any) {
-    if(this.checkIfResolverAlreadyExist(resolver)){
+    if (this.checkIfResolverAlreadyExist(resolver)) {
       throw new Error('esiste gia questo operatore')
-    }else{
-    } 
+    } else {
+    }
     this.resolvers.push(resolver);
     return this;
   }
 
   private resolveCondition(operator: any, rowValue: any, value: any) {
+    if(){
+      
+    }
     const resolverObj = this.resolvers.filter((resolver) => {
       return resolver.operator == operator;
     });
@@ -45,53 +51,61 @@ export class Filters {
   }
 
   private resolveAndCondition(term: any, row: any) {
-    console.log(term);
-    
     return term.every((t: any) => {
-      if ("logic" in t) {
-        return this.executeQueryOnRow(t, row);
-      } else {
-        return this.resolveCondition(t.operator, row[t.field], t.value);
-      }
+      return this.resolveCondition(t.operator, row[t.field], t.value);
     });
   }
 
   private resolveOrCondition(term: any, row: any) {
     return term.some((t: any) => {
-      if ("logic" in t) {
-        return this.executeQueryOnRow(t, row);
-      } else {
-        return this.resolveCondition(t.operator, row[t.field], t.value);
-      }
+      return this.resolveCondition(t.operator, row[t.field], t.value);
     });
   }
+
+
   executeQuery() {
-    if (this.data.length > 0) {
-      const filtered = this.data.filter((row) => {
-        return this.executeQueryOnRow(this.queryObject, row);
-      });
-      return filtered;
-    } else {
-      return "error";
-    }
-  }
-  private executeQueryOnRow(query: any, row: any) {
-    if ("logic" in query) {
-      if (query.logic == "and") {
-        return this.resolveAndCondition(query.term, row);
+    return this.data.filter(row => {
+      if (this.queryObject?.logic == 'and') {
+        return this.resolveAndCondition(this.queryObject.term, row)
       } else {
-        return this.resolveOrCondition(query.term, row);
+        return this.resolveOrCondition(this.queryObject.term, row)
       }
-    }
+    })
   }
 
   setData(data: any) {
     this.data = data;
     return this;
   }
+  setInitialState() {
+    this.queryObject.term.map((term: any) => {
+      console.log(term);
 
-  setQueryObject(query: any) {
-    this.queryObject = query;
-    return this;
+    })
   }
+  setState(fieldName:string,value:any){ 
+
+  }
+  checkIfFilterExist(filterName:string){
+    return Object.keys(this.state).includes(filterName)
+  }
+  initState() {
+    this.filters.forEach((query:any)=>{
+      console.log(this.checkIfFilterExist(query.name));
+      
+        if(this.checkIfFilterExist(query.name)){
+          throw new Error(`filterName deve essere univoco: ${query.name}`)
+        }else{
+          this.state[query.name] = query.initialValue
+        }
+    })
+  }
+  getState(){
+    return this.state
+  }
+  handleFieldChange(field: string, newState: any) {
+    this.state[field] = newState
+  }
+
 }
+
