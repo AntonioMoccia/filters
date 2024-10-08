@@ -3,7 +3,7 @@ import {
   Query,
   RowData,
 } from './types'
-import { Filter } from './Filter'
+import { createFilters } from './Filter'
 
 const deepQuery: Query<RowData> = {
   logic: "or",
@@ -25,17 +25,30 @@ const deepQuery: Query<RowData> = {
   ],
 };
 
-const filters = [
-  { name: 'first_name_1', field: "first_name", operator: 'not_equal', initialValue: "Danette" },
-  { name: 'first_name_2', field: "first_name", operator: 'not_equal', initialValue: "Danettefdsfsdfsfdsdfg" },
-  { name: 'first_name_3', field: "first_name", operator: 'not_equal', initialValue: "Danette" },
-  { name: 'first_name_4', field: "first_name", operator: 'not_equal', initialValue: "Danette" }
-]
- 
-const filter = new Filter({filters})
+const appContainer =document.querySelector('#app')
 
+const input = document.createElement('input')
+input.name = 'first_name_1'
 
-console.log(filter.getState());
+  appContainer?.appendChild(input)
+
+const {
+  handleStateChange,
+  getState,
+  getRows
+} = createFilters<typeof mock[0]>({
+  /*   _features:[], */
+  watch:true,
+  data: mock,
+  filtersDef: [
+    { name: 'first_name_1', field: "first_name", operator: 'not_equal', initialValue: "Danette" }
+  ]
+})
+input.addEventListener('input',(e)=>{
+  handleStateChange(e.currentTarget.name, (currentState) => e.currentTarget.value)
+  console.log(getRows())
+})
+
 
 //const filters = new Filter();
 //combineFilters(filters)

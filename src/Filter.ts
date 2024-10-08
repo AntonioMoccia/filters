@@ -1,111 +1,93 @@
-import { equalResolver, notEqualResolver } from "./resolvers";
-
-const buildInResolvers = [equalResolver, notEqualResolver];
-interface FilterProps {
-  filters: any
+import {
+  equalResolver,
+  notEqualResolver
+} from './resolvers'
+interface FilterDef<RowData> {
+  name: string,
+  operator: string,
+  initialValue: any
+  field: keyof RowData
 }
-export class Filter<RowData> {
-  data = [];
-  queryObject: any;
-  resolvers = [...buildInResolvers];
-  state:any = {};
-  filters:any ;
-  constructor({ filters }: FilterProps) {
-    this.filters = filters
-    this.initState()
-  }
-
-  queryBuilder() { }
-
-  checkIfResolverAlreadyExist(newResolver: any) {
-    return (
-      this.resolvers.filter((resolver) => {
-        return resolver.operator == newResolver.operator;
-      }).length > 0
-    );
-  }
-
-  addResolver(resolver: any) {
-    if (this.checkIfResolverAlreadyExist(resolver)) {
-      throw new Error('esiste gia questo operatore')
-    } else {
-    }
-    this.resolvers.push(resolver);
-    return this;
-  }
-
-  private resolveCondition(operator: any, rowValue: any, value: any) {
-    if(){
-      
-    }
-    const resolverObj = this.resolvers.filter((resolver) => {
-      return resolver.operator == operator;
-    });
-    if (resolverObj.length > 0) {
-      return resolverObj[0].resolver(rowValue, value);
-    } else {
-      throw new Error(
-        "Non esiste un resolver con questo operatore " + operator
-      );
-    }
-  }
-
-  private resolveAndCondition(term: any, row: any) {
-    return term.every((t: any) => {
-      return this.resolveCondition(t.operator, row[t.field], t.value);
-    });
-  }
-
-  private resolveOrCondition(term: any, row: any) {
-    return term.some((t: any) => {
-      return this.resolveCondition(t.operator, row[t.field], t.value);
-    });
-  }
-
-
-  executeQuery() {
-    return this.data.filter(row => {
-      if (this.queryObject?.logic == 'and') {
-        return this.resolveAndCondition(this.queryObject.term, row)
-      } else {
-        return this.resolveOrCondition(this.queryObject.term, row)
-      }
-    })
-  }
-
-  setData(data: any) {
-    this.data = data;
-    return this;
-  }
-  setInitialState() {
-    this.queryObject.term.map((term: any) => {
-      console.log(term);
-
-    })
-  }
-  setState(fieldName:string,value:any){ 
-
-  }
-  checkIfFilterExist(filterName:string){
-    return Object.keys(this.state).includes(filterName)
-  }
-  initState() {
-    this.filters.forEach((query:any)=>{
-      console.log(this.checkIfFilterExist(query.name));
-      
-        if(this.checkIfFilterExist(query.name)){
-          throw new Error(`filterName deve essere univoco: ${query.name}`)
-        }else{
-          this.state[query.name] = query.initialValue
-        }
-    })
-  }
-  getState(){
-    return this.state
-  }
-  handleFieldChange(field: string, newState: any) {
-    this.state[field] = newState
-  }
-
+interface CreateFiltersProps<RowData> {
+  filtersDef: FilterDef<RowData>[]
+  data: RowData[]
 }
 
+const resolversBuildIn = [equalResolver, notEqualResolver]
+//feature.getInitialState() return obj to add to state of filters qith feature name
+export function createFilters<RowData>(options: CreateFiltersProps<RowData>): any {
+  let filter = {}
+  const _resolvers = [...resolversBuildIn]
+  options.logic = options.logic || 'and'
+  filter = { _resolvers }
+  let initialState: any = {}
+  let rows: [] | RowData[] = []
+  options.filtersDef.forEach((filter: FilterDef<RowData>) => {
+    initialState[filter.name] = filter.initialValue
+  });
+  let state = { ...initialState }
+  filter = { ...filter, state }
+
+
+  const getOperatorFromBuildIn = (operator) => {
+    return _resolvers.filter(resolver => resolver.operator == operator)[0].resolver
+  }
+
+  const getOperator = (filter: FilterDef<RowData>) => {
+    if (typeof filter.operator == 'function') {
+      return filter.operator
+    } else {
+      return getOperatorFromBuildIn(filter.operator)
+    }
+  }
+  const setRows = (newRows) => {
+    rows = [...newRows]
+  }
+
+  const applyFilters = () => {
+    if (options.logic == 'and') {
+      setRows(options.data.filter(applyAndCondition))
+    } else {
+      setRows(options.data.filter(applyOrCondition))
+    }
+  }
+  const getRows = () => {
+    return rows
+  }
+  const applyAndCondition = (row: RowData) => {
+    return options.filtersDef.every(currentFilter => {
+      const operator = getOperator(currentFilter)
+      const stateValue = filter.state[currentFilter.name]
+      return operator(row[currentFilter.field], stateValue)
+    })
+  }
+  const applyOrCondition = (row: RowData) => {
+    return options.filtersDef.some(currentFilter => {
+      const operator = getOperator(currentFilter)
+      const stateValue = filter.state[currentFilter.name]
+      return operator(row[currentFilter.field], stateValue)
+    })
+  }
+
+  let filterInstance = {
+    options: {
+      ...options
+    },
+    rows,
+    
+    getState: () => {
+      return filter.state
+    },
+    handleStateChange: (filterName: string, cb: (state: any) => any) => {
+      filter.state[filterName] = cb(filter.state)
+      if (options.watch) { applyFilters() } else { return }
+    },
+    applyFilters,
+    getRows
+  }
+
+  Object.assign(filter, filterInstance)
+
+  return filter
+
+} 
