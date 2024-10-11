@@ -1,30 +1,7 @@
 import mock from "./MOCK_DATA.json";
-import { createFilter } from "./Filter";
+import { createFilter } from "./filter";
 
 
-
-const deepQuery: any = {
-  logic: "or",
-  term: [
-    {
-      logic: "and",
-      term: [
-        { field: "first_name", operator: "not_equal", value: "Danette" },
-        { field: "last_name", operator: "equal", value: "Carnier" },
-        { field: "last_name", operator: "equal", value: "Carnier" },
-      ],
-    },
-    {
-      logic: "and",
-      term: [
-        { field: "email", operator: "equal", value: "splumer2@imdb.com" },
-        { field: "gender", operator: "equal", value: "Male" },
-        { field: "gender", operator: "equal", value: "Male" }
-      ]
-
-    },
-  ],
-};
 const filters = [
   {
     name: "id",
@@ -46,14 +23,13 @@ const filters = [
 ];
 
 
-const filter = createFilter({
-  filters,
+const {handleFilterChange} = createFilter({
   data: mock.slice(0, 100),
   logic: "and",
+  filters,
   watch: true,
   onFilterStateChange:(filter)=>{
     console.log(filter);
-    
   }
 });
-filter.handleFilterChange('first_name','dane')
+handleFilterChange('first_name','dane')
