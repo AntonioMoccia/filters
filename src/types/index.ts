@@ -1,5 +1,5 @@
 export interface BaseQueryField<RowData> {
-  name:string;
+  name: string;
   field: keyof RowData;
 }
 
@@ -17,15 +17,17 @@ export type Term<RowData> =
   | EqualResolverField<RowData>
   | NotEqualResolverField<RowData>;
 
-export type RowData = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  gender: string;
-  ip_address: string;
-};
+export type RowData = unknown | object | any[];
 export type Query<RowData> = {
   logic: "or" | "and";
   term: Term<RowData>[];
 };
+export type DeepKey<T> = T extends object
+  ? {
+      [K in keyof T]-?: K extends string | number
+        ? `${K}` | `${K}.${DeepKey<T[K]>}`
+        : never;
+    }[keyof T]
+  : never;
+
+
